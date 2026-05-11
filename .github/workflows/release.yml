@@ -1,0 +1,42 @@
+name: Release macOS App
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos-app:
+    name: Build macOS app
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build app
+        env:
+          APP_VERSION: ${{ github.ref_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          APP_VERSION="${APP_VERSION#v}" bun run app:mac
+
+      - name: Create zip archive
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent ClaudeRoute.app ClaudeRoute-${GITHUB_REF_NAME}.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ClaudeRoute-${{ github.ref_name }}.zip
+          generate_release_notes: true

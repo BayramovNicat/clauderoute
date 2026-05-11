@@ -13,6 +13,8 @@ import packageJson from "../package.json" with { type: "json" };
 
 const command = process.argv[2] ?? "binary";
 const appName = packageJson.displayName ?? packageJson.name;
+const appVersion = process.env.APP_VERSION ?? packageJson.version;
+const buildNumber = process.env.BUILD_NUMBER ?? "1";
 const binaryName = packageJson.name;
 const binaryPath = join("dist", binaryName);
 
@@ -155,7 +157,10 @@ async function buildLauncher(outfile: string) {
 
 async function plist() {
 	const template = await readFile(join("scripts", "Info.plist.xml"), "utf8");
-	return template.replaceAll("{{APP_NAME}}", appName);
+	return template
+		.replaceAll("{{APP_NAME}}", appName)
+		.replaceAll("{{APP_VERSION}}", appVersion)
+		.replaceAll("{{BUILD_NUMBER}}", buildNumber);
 }
 
 function swiftString(value: string) {

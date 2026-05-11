@@ -1,6 +1,7 @@
 {
   "name": "claude-route",
   "displayName": "ClaudeRoute",
+  "version": "1.0.0",
   "module": "src/index.ts",
   "type": "module",
   "private": true,
