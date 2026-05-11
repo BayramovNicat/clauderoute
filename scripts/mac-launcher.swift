@@ -1,11 +1,10 @@
 import Cocoa
-import Security
 import WebKit
 
 let appName = "{{APP_NAME}}"
 let binaryName = "{{BINARY_NAME}}"
-let keychainService = "local.starter.app.omniroute"
 let omniRouteAuthCookieName = "auth_token"
+let omniRouteAuthCookieDefaultsKey = "omniroute.auth_token"
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
 	var window: NSWindow?
@@ -254,32 +253,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 	}
 
 	func saveOmniRouteAuthCookie(_ value: String) {
-		guard let data = value.data(using: .utf8) else { return }
-		let query: [String: Any] = [
-			kSecClass as String: kSecClassGenericPassword,
-			kSecAttrService as String: keychainService,
-			kSecAttrAccount as String: omniRouteAuthCookieName,
-		]
-		let attributes: [String: Any] = [kSecValueData as String: data]
-		let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-		if status == errSecItemNotFound {
-			var addQuery = query
-			addQuery[kSecValueData as String] = data
-			SecItemAdd(addQuery as CFDictionary, nil)
-		}
+		UserDefaults.standard.set(value, forKey: omniRouteAuthCookieDefaultsKey)
 	}
 
 	func savedOmniRouteAuthCookie() -> String? {
-		let query: [String: Any] = [
-			kSecClass as String: kSecClassGenericPassword,
-			kSecAttrService as String: keychainService,
-			kSecAttrAccount as String: omniRouteAuthCookieName,
-			kSecReturnData as String: true,
-			kSecMatchLimit as String: kSecMatchLimitOne,
-		]
-		var result: AnyObject?
-		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
-		return String(data: data, encoding: .utf8)
+		UserDefaults.standard.string(forKey: omniRouteAuthCookieDefaultsKey)
 	}
 
 	func urlChangeScript() -> WKUserScript {

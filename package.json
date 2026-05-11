@@ -1,6 +1,6 @@
 {
-  "name": "bun-swift-starter",
-  "displayName": "Bun Swift Starter",
+  "name": "claude-route",
+  "displayName": "ClaudeRoute",
   "module": "src/index.ts",
   "type": "module",
   "private": true,

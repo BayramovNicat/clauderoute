@@ -147,8 +147,6 @@ async function buildLauncher(outfile: string) {
 			"Cocoa",
 			"-framework",
 			"WebKit",
-			"-framework",
-			"Security",
 		]);
 	} finally {
 		await rm(tempDir, { recursive: true, force: true });
