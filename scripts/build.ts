@@ -121,7 +121,13 @@ async function buildMacApp() {
 		console.warn("No assets/icon.icns found. App builds without custom icon.");
 	}
 
+	signMacApp(appRoot);
 	console.log(`Created ${appRoot}`);
+}
+
+function signMacApp(appRoot: string) {
+	spawnRequired(["codesign", "--force", "--deep", "--sign", "-", appRoot]);
+	spawnRequired(["codesign", "--verify", "--deep", "--strict", appRoot]);
 }
 
 async function buildLauncher(outfile: string) {
