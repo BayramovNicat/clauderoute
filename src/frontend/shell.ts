@@ -1,4 +1,5 @@
 import { classes } from "./classes";
+import { Toggle } from "./components/Toggle";
 import { html } from "./dom";
 
 export type ShellRefs = {
@@ -27,11 +28,11 @@ export function renderShell() {
 				</div>
 				<div class="grid gap-0" id="env-fields"></div>
 				<div class="grid grid-cols-1 items-center gap-4 border-t border-[#e7e1d8] py-3 md:grid-cols-[minmax(230px,0.32fr)_minmax(0,1fr)]">
-					<label class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap text-[0.74rem] font-bold text-[#77736b] [font-family:'SF_Mono',Menlo,Consolas,monospace]" for="desktop-notifications-toggle">DESKTOP_ALERTS</label>
-					<label class="cursor-pointer justify-self-start" for="desktop-notifications-toggle">
-						<input class="absolute h-px w-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] [clip:rect(0_0_0_0)] peer" id="desktop-notifications-toggle" type="checkbox" />
-						<span class="relative grid h-[34px] w-16 grid-cols-2 items-center rounded-full border border-[#e7e1d8] bg-[#f3f0ea] text-[#77736b] shadow-[inset_0_1px_3px_rgb(23_23_23_/_0.08)] transition duration-180 hover:-translate-y-px peer-checked:border-[#d15c13] peer-checked:bg-[#f97316] peer-checked:text-white peer-checked:shadow-[inset_0_1px_3px_rgb(23_23_23_/_0.12)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-[#f97316] after:absolute after:top-0.5 after:left-0.5 after:h-7 after:w-7 after:rounded-full after:bg-white after:shadow-[0_6px_14px_rgb(23_23_23_/_0.18),0_1px_2px_rgb(23_23_23_/_0.12)] after:transition-transform after:duration-180 after:ease-out peer-checked:after:translate-x-[30px]" aria-hidden="true"></span>
-					</label>
+					<label class="overflow-hidden text-ellipsis whitespace-nowrap text-[0.74rem] font-bold text-[#77736b] [font-family:'SF_Mono',Menlo,Consolas,monospace]" for="desktop-notifications-toggle">DESKTOP_ALERTS</label>
+					${Toggle({
+						id: "desktop-notifications-toggle",
+						name: "desktop-notifications-toggle",
+					})}
 				</div>
 				<div class="mt-4 text-[0.9rem] font-bold text-[#4b4740]" id="messages" hidden></div>
 			</section>
@@ -54,10 +55,7 @@ export function renderShell() {
 		providersList: must<HTMLElement>(shell, "#providers-list"),
 		messages: must<HTMLElement>(shell, "#messages"),
 		saveButton: must<HTMLButtonElement>(shell, "#save-env"),
-		desktopNotificationsToggle: must<HTMLInputElement>(
-			shell,
-			"#desktop-notifications-toggle",
-		),
+		desktopNotificationsToggle: must<HTMLInputElement>(shell, "#desktop-notifications-toggle"),
 		refreshButton: must<HTMLButtonElement>(shell, "#refresh-providers"),
 	};
 }
