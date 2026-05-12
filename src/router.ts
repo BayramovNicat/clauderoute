@@ -3,15 +3,46 @@ import { dirname, join } from "node:path";
 
 type JsonObject = Record<string, unknown>;
 
+type NotificationHook =
+	| {
+			readonly event: "Stop";
+			readonly matcher: "";
+			readonly command: string;
+	  }
+	| {
+			readonly event: "PermissionRequest";
+			readonly matcher: "";
+			readonly command: string;
+	  };
+
+type HookCommand = {
+	type: "command";
+	command: string;
+};
+
+type HookGroup = {
+	matcher: string;
+	hooks: HookCommand[];
+};
+
+type NotificationHooks = Partial<
+	Record<NotificationHook["event"], HookGroup[]>
+>;
+
+type SettingsJson = JsonObject & {
+	env?: JsonObject;
+	hooks?: NotificationHooks;
+};
+
 type SettingsFile = {
-	json: JsonObject | null;
+	json: SettingsJson | null;
 	parseError?: string;
 };
 
 const omniRouteOrigin = "http://localhost:20128";
 const omniRouteAuthCode = "OMNIROUTE_AUTH_REQUIRED";
 const omniRouteProtectedPath = "/dashboard/providers/codex";
-const notificationHooks = [
+const notificationHooks: readonly NotificationHook[] = [
 	{
 		event: "Stop",
 		matcher: "",
@@ -95,7 +126,7 @@ export async function route(request: Request) {
 					{ status: 400 },
 				);
 			}
-			let settings = {
+			let settings: SettingsJson = {
 				...file.json,
 				env: {
 					...(isObject(file.json.env) ? file.json.env : {}),
@@ -410,46 +441,38 @@ function desktopNotificationsEnabled(json: JsonObject | null) {
 }
 
 function updateDesktopNotificationHooks(
-	settings: JsonObject,
+	settings: SettingsJson,
 	enabled: boolean,
 ) {
-	const updated = { ...settings } as JsonObject;
-	const hooks = isObject(settings.hooks) ? { ...settings.hooks } : {};
+	const updated = { ...settings } as SettingsJson;
+	const hooks = settings.hooks ? { ...settings.hooks } : {};
 
 	for (const { event, matcher, command } of notificationHooks) {
-		const groups = Array.isArray(hooks[event]) ? [...hooks[event]] : [];
+		const groups = hooks[event] ? [...hooks[event]] : [];
 		const index = groups.findIndex(
-			(group) =>
-				isObject(group) &&
-				stringValue(group.matcher) === matcher &&
-				Array.isArray(group.hooks),
+			(group) => group.matcher === matcher && group.hooks.length > 0,
 		);
-		const ownedHook = { type: "command", command };
+		const ownedHook: HookCommand = { type: "command", command };
 
 		if (enabled) {
 			if (index === -1) {
 				groups.push({ matcher, hooks: [ownedHook] });
 			} else {
 				const group = groups[index];
-				if (isObject(group)) {
-					const existing = Array.isArray(group.hooks) ? group.hooks : [];
-					if (
-						!existing.some((hook) =>
-							isSameOwnedHook(hook, { event, matcher, command }),
-						)
-					) {
-						group.hooks = [...existing, ownedHook];
-					}
+				if (
+					!group.hooks.some((hook) =>
+						isSameOwnedHook(hook, { event, matcher, command }),
+					)
+				) {
+					group.hooks = [...group.hooks, ownedHook];
 				}
 			}
 		} else if (index !== -1) {
 			const group = groups[index];
-			if (isObject(group) && Array.isArray(group.hooks)) {
-				group.hooks = group.hooks.filter(
-					(hook) => !isSameOwnedHook(hook, { event, matcher, command }),
-				);
-				if (group.hooks.length === 0) groups.splice(index, 1);
-			}
+			group.hooks = group.hooks.filter(
+				(hook) => !isSameOwnedHook(hook, { event, matcher, command }),
+			);
+			if (group.hooks.length === 0) groups.splice(index, 1);
 		}
 
 		if (groups.length === 0) delete hooks[event];
@@ -463,15 +486,13 @@ function updateDesktopNotificationHooks(
 }
 
 function hasOwnedHook(
-	hooks: JsonObject,
+	hooks: NotificationHooks,
 	target: (typeof notificationHooks)[number],
 ) {
-	const groups = Array.isArray(hooks[target.event]) ? hooks[target.event] : [];
+	const groups = hooks[target.event] ?? [];
 	return groups.some(
 		(group) =>
-			isObject(group) &&
-			stringValue(group.matcher) === target.matcher &&
-			Array.isArray(group.hooks) &&
+			group.matcher === target.matcher &&
 			group.hooks.some((hook) => isSameOwnedHook(hook, target)),
 	);
 }
