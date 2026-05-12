@@ -11,6 +11,20 @@ type SettingsFile = {
 const omniRouteOrigin = "http://localhost:20128";
 const omniRouteAuthCode = "OMNIROUTE_AUTH_REQUIRED";
 const omniRouteProtectedPath = "/dashboard/providers/codex";
+const notificationHooks = [
+	{
+		event: "Stop",
+		matcher: "",
+		command:
+			'osascript -e \'display notification "Claude finished." with title "Claude Code" sound name "Glass"\' 2>/dev/null || true',
+	},
+	{
+		event: "PermissionRequest",
+		matcher: "",
+		command:
+			'osascript -e \'display notification "Claude needs your permission." with title "Claude Code" sound name "Glass"\' 2>/dev/null || true',
+	},
+] as const;
 
 class OmniRouteAuthRequired extends Error {
 	loginUrl: string;
@@ -53,13 +67,26 @@ export async function route(request: Request) {
 		}
 
 		if (pathname === "/api/config/user" && request.method === "GET") {
-			return Response.json(await readSettingsFile());
+			const file = await readSettingsFile();
+			return Response.json({
+				...file,
+				desktopNotificationsEnabled: desktopNotificationsEnabled(file.json),
+			});
 		}
 
 		if (pathname === "/api/config/user" && request.method === "POST") {
-			const body = (await request.json()) as { env?: unknown };
+			const body = (await request.json()) as {
+				env?: unknown;
+				desktopNotificationsEnabled?: unknown;
+			};
 			const validation = validateEnvUpdate(body.env);
 			if (!validation.valid) return Response.json(validation, { status: 400 });
+
+			const notifications = validateDesktopNotificationsUpdate(
+				body.desktopNotificationsEnabled,
+			);
+			if (!notifications.valid)
+				return Response.json(notifications, { status: 400 });
 
 			const file = await readSettingsFile();
 			if (!file.json) {
@@ -68,13 +95,20 @@ export async function route(request: Request) {
 					{ status: 400 },
 				);
 			}
-			const settings = {
+			let settings = {
 				...file.json,
 				env: {
 					...(isObject(file.json.env) ? file.json.env : {}),
 					...validation.env,
 				},
 			};
+
+			if (notifications.desktopNotificationsEnabled !== undefined) {
+				settings = updateDesktopNotificationHooks(
+					settings,
+					notifications.desktopNotificationsEnabled,
+				);
+			}
 
 			const path = settingsPath();
 			await mkdir(dirname(path), { recursive: true });
@@ -351,6 +385,110 @@ function validateEnvUpdate(
 		}
 	}
 	return { valid: true, env: env as Record<string, string> };
+}
+
+function validateDesktopNotificationsUpdate(
+	desktopNotificationsEnabled: unknown,
+):
+	| { valid: true; desktopNotificationsEnabled?: boolean }
+	| { valid: false; error: string } {
+	if (desktopNotificationsEnabled === undefined) {
+		return { valid: true };
+	}
+	if (typeof desktopNotificationsEnabled !== "boolean") {
+		return {
+			valid: false,
+			error: "desktopNotificationsEnabled must be a boolean.",
+		};
+	}
+	return { valid: true, desktopNotificationsEnabled };
+}
+
+function desktopNotificationsEnabled(json: JsonObject | null) {
+	const hooks = isObject(json?.hooks) ? json.hooks : {};
+	return notificationHooks.every((hook) => hasOwnedHook(hooks, hook));
+}
+
+function updateDesktopNotificationHooks(
+	settings: JsonObject,
+	enabled: boolean,
+) {
+	const updated = { ...settings } as JsonObject;
+	const hooks = isObject(settings.hooks) ? { ...settings.hooks } : {};
+
+	for (const { event, matcher, command } of notificationHooks) {
+		const groups = Array.isArray(hooks[event]) ? [...hooks[event]] : [];
+		const index = groups.findIndex(
+			(group) =>
+				isObject(group) &&
+				stringValue(group.matcher) === matcher &&
+				Array.isArray(group.hooks),
+		);
+		const ownedHook = { type: "command", command };
+
+		if (enabled) {
+			if (index === -1) {
+				groups.push({ matcher, hooks: [ownedHook] });
+			} else {
+				const group = groups[index];
+				if (isObject(group)) {
+					const existing = Array.isArray(group.hooks) ? group.hooks : [];
+					if (
+						!existing.some((hook) =>
+							isSameOwnedHook(hook, { event, matcher, command }),
+						)
+					) {
+						group.hooks = [...existing, ownedHook];
+					}
+				}
+			}
+		} else if (index !== -1) {
+			const group = groups[index];
+			if (isObject(group) && Array.isArray(group.hooks)) {
+				group.hooks = group.hooks.filter(
+					(hook) => !isSameOwnedHook(hook, { event, matcher, command }),
+				);
+				if (group.hooks.length === 0) groups.splice(index, 1);
+			}
+		}
+
+		if (groups.length === 0) delete hooks[event];
+		else hooks[event] = groups;
+	}
+
+	if (Object.keys(hooks).length === 0) delete updated.hooks;
+	else updated.hooks = hooks;
+
+	return updated;
+}
+
+function hasOwnedHook(
+	hooks: JsonObject,
+	target: (typeof notificationHooks)[number],
+) {
+	const groups = Array.isArray(hooks[target.event]) ? hooks[target.event] : [];
+	return groups.some(
+		(group) =>
+			isObject(group) &&
+			stringValue(group.matcher) === target.matcher &&
+			Array.isArray(group.hooks) &&
+			group.hooks.some((hook) => isSameOwnedHook(hook, target)),
+	);
+}
+
+function isSameOwnedHook(
+	value: unknown,
+	target: (typeof notificationHooks)[number],
+) {
+	return (
+		isObject(value) &&
+		stringValue(value.type) === "command" &&
+		stringValue(value.command) === target.command
+	);
+}
+
+function stringValue(value: unknown) {
+	return typeof value === "string" ? value : "";
 }
 
 function isObject(value: unknown): value is JsonObject {
