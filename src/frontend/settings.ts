@@ -25,8 +25,7 @@ export function renderEnvFields(
           })),
           onchange: onChange,
         })
-      : //, ModelSelect(key, env[key], modelOptions, onChange)
-        key !== "ANTHROPIC_API_KEY"
+      : key !== "ANTHROPIC_API_KEY"
         ? Input({ name: key, value: env[key], onchange: onChange })
         : SecretInput({ name: key, value: env[key], onchange: onChange });
     fragment.append(html`

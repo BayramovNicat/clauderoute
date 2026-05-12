@@ -4,32 +4,29 @@ import { Button } from "./Button";
 
 export type InputProps = Omit<Partial<HTMLInputElement>, "style">;
 
-export function Input(props: InputProps) {
+export function Input({ className, ...rest }: InputProps) {
   return ce(
     html`<input
       class="${cn(
         "h-9.5 w-full min-w-0 rounded-[10px] border-0 bg-[#f3f0ea] px-3 text-[0.88rem] font-semibold text-[#171717] outline-none focus:shadow-[0_0_0_2px_#f97316]",
-        props.className,
+        className,
       )}"
     />` as HTMLInputElement,
-    props,
+    rest,
   );
 }
 
-export function SecretInput(props: InputProps) {
-  const input = ce(
-    Input({
-      ...props,
-      type: "password",
-      autocomplete: "off",
-      spellcheck: false,
-      className: cn(
-        "pr-11 tracking-[0.02em] font-['SF_Mono',Menlo,Consolas,monospace]",
-        props.className,
-      ),
-    }),
-    props,
-  );
+export function SecretInput({ className, ...rest }: InputProps) {
+  const input = Input({
+    ...rest,
+    type: "password",
+    autocomplete: "off",
+    spellcheck: false,
+    className: cn(
+      "pr-11 tracking-[0.02em] font-['SF_Mono',Menlo,Consolas,monospace]",
+      className,
+    ),
+  });
 
   const toggle = Button({
     content: eyeIcon(false),
