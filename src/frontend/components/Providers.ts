@@ -1,36 +1,39 @@
 import { type Provider, ProvidersService } from "../services/ProvidersService";
 import { cn, html } from "../utils/dom";
+import { Card } from "./ui/Card";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 
 export function Providers() {
-  const service = ProvidersService.getInstance();
-  const container = html`<div
+	const service = ProvidersService.getInstance();
+	const container = html`<div
     class="w-full max-w-3xl mx-auto px-4 pb-16 mt-6"
   ></div>`;
 
-  function render() {
-    const { loading, error, data } = service.getState();
+	function render() {
+		const { loading, error, data } = service.getState();
 
-    if (loading) {
-      container.replaceChildren(LoadingSpinner({ text: "Loading providers..." }));
-      return;
-    }
+		if (loading) {
+			container.replaceChildren(
+				LoadingSpinner({ text: "Loading providers..." }),
+			);
+			return;
+		}
 
-    if (error) {
-      container.replaceChildren(html`
+		if (error) {
+			container.replaceChildren(html`
 				<div class="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl text-sm font-medium">
 					Error: ${error}
 				</div>
 			`);
-      return;
-    }
+			return;
+		}
 
-    if (
-      !data?.providers ||
-      !Array.isArray(data.providers) ||
-      data.providers.length === 0
-    ) {
-      container.replaceChildren(html`
+		if (
+			!data?.providers ||
+			!Array.isArray(data.providers) ||
+			data.providers.length === 0
+		) {
+			container.replaceChildren(html`
 				<div class="flex flex-col items-center text-center p-8 bg-white/80 backdrop-blur-md rounded-2xl border border-[#e7e1d8] shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
 					<div class="h-16 w-16 bg-[#faf9f6] rounded-full flex items-center justify-center border border-[#e7e1d8]/60 mb-4 text-[#a19c91]">
 						<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -41,27 +44,27 @@ export function Providers() {
 					<p class="text-[#77736b] text-sm mt-2 max-w-sm leading-relaxed">It looks like there are no active AI providers configured in your OmniRoute account.</p>
 				</div>
 			`);
-      return;
-    }
+			return;
+		}
 
-    const listHtml = data.providers.map((p: Provider) => {
-      const modelsList = p.models || [];
+		const listHtml = data.providers.map((p: Provider) => {
+			const modelsList = p.models || [];
 
-      const providerTitle = (p.provider || p.id || "Unknown")
-        .replace(/[-_]/g, " ")
-        .replace(/\b\w/g, (char: string) => char.toUpperCase());
+			const providerTitle = (p.provider || p.id || "Unknown")
+				.replace(/[-_]/g, " ")
+				.replace(/\b\w/g, (char: string) => char.toUpperCase());
 
-      const emailStr = p.email || p.name || p.account || "No email linked";
-      const isActive = p.status === "active" || p.enabled !== false;
+			const emailStr = p.email || p.name || p.account || "No email linked";
+			const isActive = p.status === "active" || p.enabled !== false;
 
-      const badgeClass = isActive
-        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/25 shadow-[0_2px_8px_rgba(16,185,129,0.03)]"
-        : "bg-rose-500/10 text-rose-600 border border-rose-500/25 shadow-[0_2px_8px_rgba(244,63,94,0.03)]";
-      const dotClass = isActive
-        ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse"
-        : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse";
+			const badgeClass = isActive
+				? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/25 shadow-[0_2px_8px_rgba(16,185,129,0.03)]"
+				: "bg-rose-500/10 text-rose-600 border border-rose-500/25 shadow-[0_2px_8px_rgba(244,63,94,0.03)]";
+			const dotClass = isActive
+				? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse"
+				: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse";
 
-      return html`
+			return html`
         <div
           class="flex flex-col p-5 rounded-2xl border border-[#e7e1d8]/40 bg-[#faf9f6]/20 hover:bg-[#faf9f6]/40 hover:border-[#e7e1d8]/80 hover:shadow-[0_4px_16px_rgba(0,0,0,0.01)] transition-all duration-300"
         >
@@ -95,9 +98,9 @@ export function Providers() {
             <div class="flex items-center shrink-0">
               <div
                 class="${cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold select-none",
-                  badgeClass,
-                )}"
+									"flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold select-none",
+									badgeClass,
+								)}"
               >
                 <span
                   class="${cn("h-1.5 w-1.5 rounded-full", dotClass)}"
@@ -117,7 +120,7 @@ export function Providers() {
             >
             <div class="flex flex-wrap gap-1.5 pt-1">
               ${modelsList.map(
-                (m) => html`
+								(m) => html`
                   <span
                     class="bg-[#faf9f6]/80 border border-[#e7e1d8]/60 text-[#2c2925] text-xs px-2.5 py-1 rounded-lg font-semibold transition-all hover:border-[#e7e1d8] hover:bg-[#faf9f6] select-none cursor-default shadow-2xs hover:shadow-xs"
                     title="${m.id}"
@@ -125,36 +128,24 @@ export function Providers() {
                     ${m.name}
                   </span>
                 `,
-              )}
+							)}
             </div>
           </div>
         </div>
       `;
-    });
+		});
 
-    container.replaceChildren(html`
-      <div
-        class="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e7e1d8] shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden transition-all duration-300"
-      >
-        <div
-          class="p-6 border-b border-[#e7e1d8]/60 bg-linear-to-r from-transparent via-[#fcfaf7] to-transparent"
-        >
-          <h1
-            class="text-2xl font-extrabold tracking-tight bg-linear-to-r from-[#171717] via-[#2c2925] to-[#f97316] bg-clip-text text-transparent"
-          >
-            Active Routing Providers
-          </h1>
-          <p class="text-[#77736b] text-sm mt-1">
-            Review active upstream accounts, connection health, and routing
-            models.
-          </p>
-        </div>
-        <div class="p-6 flex flex-col gap-y-5">${listHtml}</div>
-      </div>
-    `);
-  }
+		container.replaceChildren(
+			Card({
+				title: "Active Routing Providers",
+				description:
+					"Review active upstream accounts, connection health, and routing models.",
+				content: listHtml,
+			}),
+		);
+	}
 
-  service.subscribe(() => render());
-  render();
-  return container;
+	service.subscribe(() => render());
+	render();
+	return container;
 }

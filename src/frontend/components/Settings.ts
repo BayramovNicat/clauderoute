@@ -3,6 +3,7 @@ import { cn, html } from "../utils/dom";
 import { type FieldDef, SettingsField } from "./SettingsField";
 import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Label } from "./ui/Label";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Toggle } from "./ui/Toggle";
@@ -53,7 +54,9 @@ const MODEL_FIELDS: FieldDef[] = [
 
 export function Settings() {
 	const service = new SettingsService();
-	const container = html`<div class="w-full max-w-3xl mx-auto px-4 py-8"></div>`;
+	const container = html`<div
+    class="w-full max-w-3xl mx-auto px-4 py-8"
+  ></div>`;
 
 	let wasLoading = true;
 
@@ -129,36 +132,16 @@ export function Settings() {
 			notificationToggleRef = toggleInput;
 		}
 
-		const layout = html`
-      <div
-        class="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e7e1d8] shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_35px_rgb(0,0,0,0.04)]"
-      >
-        <!-- Header block -->
-        <div
-          class="p-6 border-b border-[#e7e1d8]/60 bg-linear-to-r from-transparent via-[#fcfaf7] to-transparent flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        >
-          <div>
-            <h1
-              class="text-2xl font-extrabold tracking-tight bg-linear-to-r from-[#171717] via-[#2c2925] to-[#d15c13] bg-clip-text text-transparent"
-            >
-              Claude Code Settings
-            </h1>
-            <p class="text-[#77736b] text-sm mt-1">
-              Configure Claude's local environment values and active route
-              defaults.
-            </p>
-          </div>
-          <div class="flex items-center gap-3 shrink-0">
-            ${resetBtn} ${saveBtn}
-          </div>
-        </div>
-
-        <!-- Alerts inside card -->
-        <div class="px-6 pt-6">${successMessageEl} ${errorMessageEl}</div>
-
-        <!-- Form List -->
-        <div class="p-6 flex flex-col gap-y-5">
-          <!-- Notifications toggle row -->
+		const layout = Card({
+			className: "hover:shadow-[0_8px_35px_rgb(0,0,0,0.04)]",
+			title: "Claude Code Settings",
+			description:
+				"Configure Claude's local environment values and active route defaults.",
+			titleGradientTo: "to-[#d15c13]",
+			headerActions: [resetBtn, saveBtn],
+			alerts: [successMessageEl, errorMessageEl],
+			content: [
+				html`
           <div
             class="flex items-center justify-between p-4 rounded-xl bg-[#faf9f6]/50 border border-[#e7e1d8]/40 hover:bg-[#faf9f6] hover:border-[#e7e1d8]/80 transition-all duration-200 group"
           >
@@ -174,9 +157,8 @@ export function Settings() {
             </div>
             <div class="shrink-0 flex items-center">${notificationsToggle}</div>
           </div>
-
-          <div class="h-px bg-[#e7e1d8]/60 my-2"></div>
-
+        `,
+				html`
           <!-- Env Vars Fields -->
           <div class="flex flex-col gap-y-5">
             ${topFields}
@@ -184,9 +166,9 @@ export function Settings() {
               ${modelFields}
             </div>
           </div>
-        </div>
-      </div>
-    `;
+        `,
+			],
+		});
 
 		container.appendChild(layout);
 	}
