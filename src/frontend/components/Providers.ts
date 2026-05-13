@@ -2,7 +2,7 @@ import { type Provider, ProvidersService } from "../services/ProvidersService";
 import { cn, html } from "../utils/dom";
 
 export function Providers() {
-  const service = new ProvidersService();
+  const service = ProvidersService.getInstance();
   const container = html`<div
     class="w-full max-w-3xl mx-auto px-4 pb-16 mt-6"
   ></div>`;

@@ -32,14 +32,23 @@ export interface ProvidersData {
 }
 
 export class ProvidersService {
-  public ready: Promise<void>;
+  public ready!: Promise<void>;
   private data: ProvidersData | null = null;
   private error: string | null = null;
   private loading = true;
   private listeners: (() => void)[] = [];
 
-  constructor() {
+  private static instance: ProvidersService | null = null;
+
+  private constructor() {
     this.ready = this.fetchData();
+  }
+
+  public static getInstance(): ProvidersService {
+    if (!ProvidersService.instance) {
+      ProvidersService.instance = new ProvidersService();
+    }
+    return ProvidersService.instance;
   }
 
   subscribe(listener: () => void) {

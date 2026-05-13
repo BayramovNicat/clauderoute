@@ -190,7 +190,7 @@ export class SettingsService {
 
   private async loadModels() {
     try {
-      const providersService = new ProvidersService();
+      const providersService = ProvidersService.getInstance();
       await providersService.ready;
 
       const data = providersService.getState().data;
