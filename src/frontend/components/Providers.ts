@@ -11,7 +11,7 @@ export function Providers() {
     const { loading, error, data } = service.getState();
 
     if (loading) {
-      container.innerHTML = `
+      container.innerHTML = /*html*/ `
 				<div class="flex flex-col items-center justify-center py-20 gap-y-4">
 					<div class="w-12 h-12 border-4 border-[#f97316]/30 border-t-[#f97316] rounded-full animate-spin"></div>
 					<p class="text-[#77736b] font-medium text-sm animate-pulse">Loading providers...</p>
@@ -21,7 +21,7 @@ export function Providers() {
     }
 
     if (error) {
-      container.innerHTML = `
+      container.innerHTML = /*html*/ `
 				<div class="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl text-sm font-medium">
 					Error: ${error}
 				</div>
@@ -34,7 +34,7 @@ export function Providers() {
       !Array.isArray(data.providers) ||
       data.providers.length === 0
     ) {
-      container.innerHTML = `
+      container.innerHTML = /*html*/ `
 				<div class="flex flex-col items-center text-center p-8 bg-white/80 backdrop-blur-md rounded-2xl border border-[#e7e1d8] shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
 					<div class="h-16 w-16 bg-[#faf9f6] rounded-full flex items-center justify-center border border-[#e7e1d8]/60 mb-4 text-[#a19c91]">
 						<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
