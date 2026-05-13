@@ -4,6 +4,7 @@ import { type FieldDef, SettingsField } from "./SettingsField";
 import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
 import { Label } from "./ui/Label";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Toggle } from "./ui/Toggle";
 
 const TOP_FIELDS: FieldDef[] = [
@@ -65,16 +66,9 @@ export function Settings() {
 	function render() {
 		if (service.isLoading()) {
 			wasLoading = true;
-			container.replaceChildren(html`
-        <div class="flex flex-col items-center justify-center py-20 gap-y-4">
-          <div
-            class="w-12 h-12 border-4 border-[#f97316]/30 border-t-[#f97316] rounded-full animate-spin"
-          ></div>
-          <p class="text-[#77736b] font-medium text-sm animate-pulse">
-            Loading Claude environment settings...
-          </p>
-        </div>
-      `);
+			container.replaceChildren(
+				LoadingSpinner({ text: "Loading Claude environment settings..." }),
+			);
 			return;
 		}
 

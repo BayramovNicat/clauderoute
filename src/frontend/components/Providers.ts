@@ -1,5 +1,6 @@
 import { type Provider, ProvidersService } from "../services/ProvidersService";
 import { cn, html } from "../utils/dom";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 
 export function Providers() {
   const service = ProvidersService.getInstance();
@@ -11,21 +12,16 @@ export function Providers() {
     const { loading, error, data } = service.getState();
 
     if (loading) {
-      container.innerHTML = /*html*/ `
-				<div class="flex flex-col items-center justify-center py-20 gap-y-4">
-					<div class="w-12 h-12 border-4 border-[#f97316]/30 border-t-[#f97316] rounded-full animate-spin"></div>
-					<p class="text-[#77736b] font-medium text-sm animate-pulse">Loading providers...</p>
-				</div>
-			`;
+      container.replaceChildren(LoadingSpinner({ text: "Loading providers..." }));
       return;
     }
 
     if (error) {
-      container.innerHTML = /*html*/ `
+      container.replaceChildren(html`
 				<div class="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl text-sm font-medium">
 					Error: ${error}
 				</div>
-			`;
+			`);
       return;
     }
 
@@ -34,7 +30,7 @@ export function Providers() {
       !Array.isArray(data.providers) ||
       data.providers.length === 0
     ) {
-      container.innerHTML = /*html*/ `
+      container.replaceChildren(html`
 				<div class="flex flex-col items-center text-center p-8 bg-white/80 backdrop-blur-md rounded-2xl border border-[#e7e1d8] shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
 					<div class="h-16 w-16 bg-[#faf9f6] rounded-full flex items-center justify-center border border-[#e7e1d8]/60 mb-4 text-[#a19c91]">
 						<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -44,7 +40,7 @@ export function Providers() {
 					<h2 class="text-xl font-bold text-[#171717] tracking-tight">No Active Providers Found</h2>
 					<p class="text-[#77736b] text-sm mt-2 max-w-sm leading-relaxed">It looks like there are no active AI providers configured in your OmniRoute account.</p>
 				</div>
-			`;
+			`);
       return;
     }
 
@@ -120,16 +116,16 @@ export function Providers() {
               >Available Routing Models (${modelsList.length})</span
             >
             <div class="flex flex-wrap gap-1.5 pt-1">
-              ${modelsList.map((m) => {
-                return html`
+              ${modelsList.map(
+                (m) => html`
                   <span
                     class="bg-[#faf9f6]/80 border border-[#e7e1d8]/60 text-[#2c2925] text-xs px-2.5 py-1 rounded-lg font-semibold transition-all hover:border-[#e7e1d8] hover:bg-[#faf9f6] select-none cursor-default shadow-2xs hover:shadow-xs"
                     title="${m.id}"
                   >
                     ${m.name}
                   </span>
-                `;
-              })}
+                `,
+              )}
             </div>
           </div>
         </div>
