@@ -6,31 +6,31 @@ import { Label } from "./ui/Label";
 import { Select } from "./ui/Select";
 
 export interface FieldDef {
-	key: EnvKey;
-	label?: string;
-	desc: string;
-	type: "text" | "secret" | "select";
-	placeholder?: string;
+  key: EnvKey;
+  label?: string;
+  desc: string;
+  type: "text" | "secret" | "select";
+  placeholder?: string;
 }
 
 export interface SettingsFieldProps {
-	def: FieldDef;
-	service: SettingsService;
-	selectOptions: { value: string; label: string }[];
+  def: FieldDef;
+  service: SettingsService;
+  selectOptions: { value: string; label: string }[];
 }
 
 export function SettingsField({
-	def,
-	service,
-	selectOptions,
+  def,
+  service,
+  selectOptions,
 }: SettingsFieldProps): HTMLElement {
-	const id = def.key.toLowerCase().replace(/_/g, "-");
-	let fieldEl: HTMLElement;
-	let actualInput: HTMLInputElement | HTMLSelectElement;
+  const id = def.key.toLowerCase().replace(/_/g, "-");
+  let fieldEl: HTMLElement;
+  let actualInput: HTMLInputElement | HTMLSelectElement;
 
-	// Revert/Undo Action Button for localized resets
-	const revertBtn = Button({
-		content: html`
+  // Revert/Undo Action Button for localized resets
+  const revertBtn = Button({
+    content: html`
       <span
         class="flex items-center gap-1 text-[#f97316] hover:text-[#d15c13] transition-colors"
       >
@@ -47,86 +47,86 @@ export function SettingsField({
         <span class="text-xs font-bold uppercase tracking-wider">Undo</span>
       </span>
     `,
-		className:
-			"p-1 rounded-md border-0 bg-transparent cursor-pointer transition-all hover:bg-[#faf9f6]",
-		title: `Revert ${def.label ?? def.key} to original value`,
-		onclick: () => {
-			const origVal = service.getOriginalEnvValue(def.key);
-			service.setEnvValue(def.key, origVal);
-			if (actualInput) {
-				actualInput.value = origVal;
-				updateRevertVisibility(origVal);
-			}
-		},
-	});
-	revertBtn.style.display = "none";
+    className:
+      "p-1 rounded-md border-0 bg-transparent cursor-pointer transition-all hover:bg-[#faf9f6]",
+    title: `Revert ${def.label ?? def.key} to original value`,
+    onclick: () => {
+      const origVal = service.getOriginalEnvValue(def.key);
+      service.setEnvValue(def.key, origVal);
+      if (actualInput) {
+        actualInput.value = origVal;
+        updateRevertVisibility(origVal);
+      }
+    },
+  });
+  revertBtn.style.display = "none";
 
-	const updateRevertVisibility = (val: string) => {
-		const origVal = service.getOriginalEnvValue(def.key);
-		revertBtn.style.display = val !== origVal ? "inline-block" : "none";
-	};
+  const updateRevertVisibility = (val: string) => {
+    const origVal = service.getOriginalEnvValue(def.key);
+    revertBtn.style.display = val !== origVal ? "inline-block" : "none";
+  };
 
-	// Select input variant
-	// Render input/select variant
-	const onInput = (e: Event) => {
-		const val = (e.target as HTMLInputElement | HTMLSelectElement).value;
-		service.setEnvValue(def.key, val);
-		updateRevertVisibility(val);
-	};
+  // Select input variant
+  // Render input/select variant
+  const onInput = (e: Event) => {
+    const val = (e.target as HTMLInputElement | HTMLSelectElement).value;
+    service.setEnvValue(def.key, val);
+    updateRevertVisibility(val);
+  };
 
-	if (def.type === "select") {
-		fieldEl = Select({
-			id,
-			value: service.getEnvValue(def.key),
-			options: selectOptions,
-			onchange: onInput,
-		});
-		actualInput = fieldEl as HTMLSelectElement;
-	} else {
-		const props = {
-			id,
-			value: service.getEnvValue(def.key),
-			placeholder: def.placeholder,
-			oninput: onInput,
-		};
-		fieldEl = def.type === "secret" ? SecretInput(props) : Input(props);
-		actualInput = (
-			def.type === "secret" ? fieldEl.querySelector("input") : fieldEl
-		) as HTMLInputElement;
-	}
+  if (def.type === "select") {
+    fieldEl = Select({
+      id,
+      value: service.getEnvValue(def.key),
+      options: selectOptions,
+      onchange: onInput,
+    });
+    actualInput = fieldEl as HTMLSelectElement;
+  } else {
+    const props = {
+      id,
+      value: service.getEnvValue(def.key),
+      placeholder: def.placeholder,
+      oninput: onInput,
+    };
+    fieldEl = def.type === "secret" ? SecretInput(props) : Input(props);
+    actualInput = (
+      def.type === "secret" ? fieldEl.querySelector("input") : fieldEl
+    ) as HTMLInputElement;
+  }
 
-	// Subscribe to service updates to sync programmatically updated values (like global resets/saves)
-	service.subscribe(() => {
-		const currentVal = service.getEnvValue(def.key);
-		if (actualInput) {
-			if (
-				document.activeElement !== actualInput &&
-				actualInput.value !== currentVal
-			) {
-				actualInput.value = currentVal;
-			}
-			updateRevertVisibility(currentVal);
-		}
-	});
+  // Subscribe to service updates to sync programmatically updated values (like global resets/saves)
+  service.subscribe(() => {
+    const currentVal = service.getEnvValue(def.key);
+    if (actualInput) {
+      if (
+        document.activeElement !== actualInput &&
+        actualInput.value !== currentVal
+      ) {
+        actualInput.value = currentVal;
+      }
+      updateRevertVisibility(currentVal);
+    }
+  });
 
-	// Initial styling setup
-	const initialValue = service.getEnvValue(def.key);
-	setTimeout(() => {
-		updateRevertVisibility(initialValue);
-	}, 0);
+  // Initial styling setup
+  const initialValue = service.getEnvValue(def.key);
+  setTimeout(() => {
+    updateRevertVisibility(initialValue);
+  }, 0);
 
-	return html`
+  return html`
     <div
       class="flex flex-col gap-y-2 group p-4 rounded-xl border border-[#e7e1d8]/30 bg-white/40 backdrop-blur-xs hover:border-[#e7e1d8]/80 focus-within:border-[#f97316]/40 focus-within:bg-[#faf9f6]/40 transition-all duration-300"
     >
       <div class="flex items-center justify-between min-h-6">
         <div class="flex items-center gap-x-2">
           ${Label({
-						content: def.label ?? def.key,
-						htmlFor: id,
-						className:
-							"text-[0.82rem] font-extrabold uppercase tracking-wider text-[#77736b] group-focus-within:text-[#f97316] transition-colors cursor-pointer",
-					})}
+            content: def.label ?? def.key,
+            htmlFor: id,
+            className:
+              "text-[0.82rem] font-extrabold uppercase tracking-wider text-[#77736b] group-focus-within:text-[#f97316] transition-colors cursor-pointer",
+          })}
         </div>
         ${revertBtn}
       </div>
