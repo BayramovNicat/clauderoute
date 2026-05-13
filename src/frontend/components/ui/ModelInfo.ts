@@ -6,6 +6,12 @@ export type ModelInfoProps = {
   className?: string;
 } & Omit<Partial<HTMLDivElement>, "style">;
 
+interface QuotaInfo {
+  percentage?: number;
+  remaining?: number;
+  displayText: string;
+}
+
 export function ModelInfo({
   model,
   limitData,
@@ -13,9 +19,10 @@ export function ModelInfo({
   ...props
 }: ModelInfoProps): HTMLDivElement {
   let limitText = "";
+  let hoverTitleText = "Usage Limits";
+
   if (limitData) {
     if (typeof limitData === "object" && limitData !== null) {
-      const parts: string[] = [];
       const session = (limitData.session ?? limitData.session_limit) as
         | Record<string, unknown>
         | number
@@ -25,18 +32,19 @@ export function ModelInfo({
         | number
         | undefined;
 
-      const formatQuota = (
+      const getQuotaInfo = (
         label: string,
         q: Record<string, unknown> | number | undefined,
-      ) => {
-        if (q === undefined) return;
+      ): QuotaInfo | undefined => {
+        if (q === undefined) return undefined;
         if (typeof q === "number") {
-          parts.push(`${label}: ${q}`);
-          return;
+          return { displayText: `${label}: ${q}` };
         }
         if (typeof q.remainingPercentage === "number") {
-          parts.push(`${label}: ${q.remainingPercentage}%`);
-          return;
+          return {
+            percentage: q.remainingPercentage,
+            displayText: `${label}: ${q.remainingPercentage}%`,
+          };
         }
         const t = typeof q.total === "number" ? q.total : 0;
         const u = typeof q.used === "number" ? q.used : 0;
@@ -48,20 +56,63 @@ export function ModelInfo({
               : undefined;
 
         if (t > 0 && r !== undefined) {
-          parts.push(`${label}: ${Math.round((r / t) * 100)}%`);
-        } else if (r !== undefined) {
-          parts.push(`${label}: ${r} left`);
-        } else if (t > 0) {
-          parts.push(`${label}: ${t}`);
+          const pct = Math.round((r / t) * 100);
+          return {
+            percentage: pct,
+            remaining: r,
+            displayText: `${label}: ${pct}%`,
+          };
         }
+        if (r !== undefined) {
+          return {
+            remaining: r,
+            displayText: `${label}: ${r} left`,
+          };
+        }
+        if (t > 0) {
+          return {
+            displayText: `${label}: ${t}`,
+          };
+        }
+        return undefined;
       };
 
-      formatQuota("Session", session);
-      formatQuota("Weekly", weekly);
+      const sessionInfo = getQuotaInfo("Session", session);
+      const weeklyInfo = getQuotaInfo("Weekly", weekly);
 
-      if (session === undefined && weekly === undefined) {
+      if (sessionInfo || weeklyInfo) {
+        // Tooltip hover text: full descriptive combination
+        const parts: string[] = [];
+        if (sessionInfo) parts.push(sessionInfo.displayText);
+        if (weeklyInfo) parts.push(weeklyInfo.displayText);
+        hoverTitleText = parts.join(" | ");
+
+        const getShortText = (prefix: string, info: QuotaInfo): string => {
+          if (info.percentage !== undefined) {
+            return `${prefix}: ${info.percentage}%`;
+          }
+          if (info.remaining !== undefined) {
+            return `${prefix}: ${info.remaining} left`;
+          }
+          return info.displayText
+            .replace("Session", "S")
+            .replace("Weekly", "W");
+        };
+
+        // Badge display text: show BOTH session and weekly using super short prefixes (S / W)
+        if (sessionInfo && weeklyInfo) {
+          const sText = getShortText("S", sessionInfo);
+          const wText = getShortText("W", weeklyInfo);
+          limitText = `${sText} | ${wText}`;
+        } else if (sessionInfo) {
+          limitText = getShortText("S", sessionInfo);
+        } else if (weeklyInfo) {
+          limitText = getShortText("W", weeklyInfo);
+        }
+      } else {
+        // Fallback for flat limit values/objects
         if (typeof limitData.remainingPercentage === "number") {
-          parts.push(`${limitData.remainingPercentage}%`);
+          limitText = `${limitData.remainingPercentage}%`;
         } else {
           const t = typeof limitData.total === "number" ? limitData.total : 0;
           const u = typeof limitData.used === "number" ? limitData.used : 0;
@@ -72,23 +123,21 @@ export function ModelInfo({
                 ? t - u
                 : undefined;
           if (t > 0 && r !== undefined) {
-            parts.push(`${Math.round((r / t) * 100)}%`);
+            limitText = `${Math.round((r / t) * 100)}%`;
           } else if (r !== undefined) {
-            parts.push(`Remaining: ${r}`);
+            limitText = `${r} left`;
+          } else {
+            const raw = JSON.stringify(limitData)
+              .replace(/[{""}]/g, "")
+              .replace(/:/g, ": ");
+            limitText = raw.length > 40 ? `${raw.substring(0, 37)}...` : raw;
           }
         }
-      }
-
-      if (parts.length > 0) {
-        limitText = parts.join(" | ");
-      } else {
-        const raw = JSON.stringify(limitData)
-          .replace(/[{""}]/g, "")
-          .replace(/:/g, ": ");
-        limitText = raw.length > 40 ? `${raw.substring(0, 37)}...` : raw;
+        hoverTitleText = `Usage Limits: ${limitText}`;
       }
     } else {
       limitText = String(limitData);
+      hoverTitleText = `Usage Limits: ${limitText}`;
     }
   }
 
@@ -110,7 +159,7 @@ export function ModelInfo({
       }
       ${
         limitText
-          ? html`<span class="text-[0.65rem] font-bold text-[#8c877d] uppercase tracking-wide select-none cursor-help group-hover:text-[#6a665d] transition-colors" title="Usage Limits">${limitText}</span>`
+          ? html`<span class="text-[0.65rem] font-bold text-[#8c877d] uppercase tracking-wide select-none cursor-help group-hover:text-[#6a665d] transition-colors" title="${hoverTitleText}">${limitText}</span>`
           : ""
       }
     </div>
