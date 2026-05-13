@@ -1,3 +1,5 @@
+import { Observable } from "../utils/observable";
+
 export interface Model {
   id: string;
   name: string;
@@ -31,16 +33,16 @@ export interface ProvidersData {
   aliases: Record<string, string>;
 }
 
-export class ProvidersService {
+export class ProvidersService extends Observable {
   public ready!: Promise<void>;
   private data: ProvidersData | null = null;
   private error: string | null = null;
   private loading = true;
-  private listeners: (() => void)[] = [];
 
   private static instance: ProvidersService | null = null;
 
   private constructor() {
+    super();
     this.ready = this.fetchData();
   }
 
@@ -49,17 +51,6 @@ export class ProvidersService {
       ProvidersService.instance = new ProvidersService();
     }
     return ProvidersService.instance;
-  }
-
-  subscribe(listener: () => void) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter((l) => l !== listener);
-    };
-  }
-
-  private notify() {
-    for (const l of this.listeners) l();
   }
 
   async fetchData() {

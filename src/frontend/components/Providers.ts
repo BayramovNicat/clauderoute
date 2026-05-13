@@ -49,10 +49,7 @@ export function Providers() {
     }
 
     const listHtml = data.providers.map((p: Provider) => {
-      const providerKey = p.provider || p.id;
-      const inlineModels = Array.isArray(p.models) ? p.models : [];
-      const builtInModels = data.models[providerKey] || [];
-      const modelsList = inlineModels.length > 0 ? inlineModels : builtInModels;
+      const modelsList = p.models || [];
 
       const providerTitle = (p.provider || p.id || "Unknown")
         .replace(/[-_]/g, " ")

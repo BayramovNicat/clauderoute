@@ -1,3 +1,4 @@
+import { Observable } from "../utils/observable";
 import { ProvidersService } from "./ProvidersService";
 
 export const envDefaults = {
@@ -24,7 +25,7 @@ export type ModelOption = {
   label: string;
 };
 
-export class SettingsService {
+export class SettingsService extends Observable {
   private originalState: SettingsState = {
     env: { ...envDefaults },
     desktopNotificationsEnabled: false,
@@ -36,7 +37,6 @@ export class SettingsService {
   };
 
   private modelOptions: ModelOption[] = [];
-  private listeners: (() => void)[] = [];
 
   private loading = true;
   private saving = false;
@@ -44,6 +44,7 @@ export class SettingsService {
   private successMessage = "";
 
   constructor() {
+    super();
     this.init();
   }
 
@@ -63,19 +64,6 @@ export class SettingsService {
     } finally {
       this.loading = false;
       this.notify();
-    }
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter((l) => l !== listener);
-    };
-  }
-
-  private notify() {
-    for (const listener of this.listeners) {
-      listener();
     }
   }
 
