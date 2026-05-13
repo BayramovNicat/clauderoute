@@ -1,5 +1,5 @@
 import { type Provider, ProvidersService } from "../services/ProvidersService";
-import { cn, html } from "../utils/dom";
+import { html } from "../utils/dom";
 import { Card } from "./ui/Card";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 
@@ -97,13 +97,10 @@ export function Providers() {
             </div>
             <div class="flex items-center shrink-0">
               <div
-                class="${cn(
-									"flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold select-none",
-									badgeClass,
-								)}"
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold select-none ${badgeClass}"
               >
                 <span
-                  class="${cn("h-1.5 w-1.5 rounded-full", dotClass)}"
+                  class="h-1.5 w-1.5 rounded-full ${dotClass}"
                 ></span>
                 ${isActive ? "Active" : "Disabled"}
               </div>

@@ -7,7 +7,7 @@ import { Select } from "./ui/Select";
 
 export interface FieldDef {
 	key: EnvKey;
-	label: string;
+	label?: string;
 	desc: string;
 	type: "text" | "secret" | "select";
 	placeholder?: string;
@@ -49,7 +49,7 @@ export function SettingsField({
     `,
 		className:
 			"p-1 rounded-md border-0 bg-transparent cursor-pointer transition-all hover:bg-[#faf9f6]",
-		title: `Revert ${def.label} to original value`,
+		title: `Revert ${def.label ?? def.key} to original value`,
 		onclick: () => {
 			const origVal = service.getOriginalEnvValue(def.key);
 			service.setEnvValue(def.key, origVal);
@@ -122,7 +122,7 @@ export function SettingsField({
       <div class="flex items-center justify-between min-h-6">
         <div class="flex items-center gap-x-2">
           ${Label({
-						content: def.label,
+						content: def.label ?? def.key,
 						htmlFor: id,
 						className:
 							"text-[0.82rem] font-extrabold uppercase tracking-wider text-[#77736b] group-focus-within:text-[#f97316] transition-colors cursor-pointer",
