@@ -1,5 +1,4 @@
+import { Providers } from "./components/Providers";
 import { Settings } from "./components/Settings";
 
-const app = Settings();
-
-document.body.appendChild(app);
+document.body.append(Settings(), Providers());
