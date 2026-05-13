@@ -82,11 +82,14 @@ export async function route(request: Request) {
     }
 
     if (
-      (pathname === "/api/providers" || pathname === "/api/provider-models") &&
+      (pathname === "/api/providers" ||
+        pathname === "/api/provider-models" ||
+        pathname === "/api/usage/provider-limits") &&
       request.method === "GET"
     ) {
       const response = await omniRouteFetch(`${pathname}${search}`, request);
       const text = await response.text();
+
       assertOmniRouteJsonResponse(response, text);
       return new Response(text, {
         status: response.status,

@@ -31,6 +31,7 @@ export interface ProvidersData {
   providers: Provider[];
   models: Record<string, Model[]>;
   aliases: Record<string, string>;
+  limits?: Record<string, Record<string, unknown>>;
 }
 
 export class ProvidersService extends Observable {
@@ -95,11 +96,14 @@ export class ProvidersService extends Observable {
         return p;
       });
 
-      const modelsRes = await fetch("/api/provider-models/built-in").catch(
-        () => null,
-      );
+      const [modelsRes, limitsRes] = await Promise.all([
+        fetch("/api/provider-models/built-in").catch(() => null),
+        fetch("/api/usage/provider-limits").catch(() => null),
+      ]);
+
       const models: Record<string, Model[]> = {};
       let aliases: Record<string, string> = {};
+      const limits: Record<string, Record<string, unknown>> = {};
 
       if (modelsRes?.ok) {
         const modelsData = await modelsRes.json();
@@ -111,6 +115,26 @@ export class ProvidersService extends Observable {
         }
         if (modelsData.aliases) {
           aliases = modelsData.aliases;
+        }
+      }
+
+      if (limitsRes?.ok) {
+        const limitsData = await limitsRes.json().catch(() => null);
+        if (limitsData?.caches) {
+          for (const [providerId, providerData] of Object.entries(
+            limitsData.caches as Record<string, Record<string, unknown>>,
+          )) {
+            const quotas = providerData?.quotas;
+            if (quotas && typeof quotas === "object") {
+              if ("session" in quotas || "weekly" in quotas) {
+                limits[providerId] = quotas;
+              } else {
+                for (const [modelId, modelQuota] of Object.entries(quotas)) {
+                  limits[modelId] = modelQuota as Record<string, unknown>;
+                }
+              }
+            }
+          }
         }
       }
 
@@ -127,6 +151,7 @@ export class ProvidersService extends Observable {
         providers: providersList,
         models,
         aliases,
+        limits,
       };
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Unknown error occurred";
